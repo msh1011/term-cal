@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/eidolon/wordwrap"
-	"github.com/fatih/color"
+	"github.com/heroku/color"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 )
@@ -22,7 +22,6 @@ type CalendarRequest struct {
 	Highlights string `schema:"highlights"`
 	Exclude    string `schema:"exclude"`
 	MaxWidth   int    `schema:"width"`
-	NoColor    bool   `schema:"noColor"`
 
 	colorMap map[*regexp.Regexp]string
 	exclude  []*regexp.Regexp
@@ -90,9 +89,6 @@ var colorMap = map[string]func(...interface{}) string{
 }
 
 func (c *CalendarRequest) ColorTitle(s, resp string) string {
-	if c.NoColor {
-		return s
-	}
 	for r, v := range c.colorMap {
 		if _, ok := colorMap[v]; !ok {
 			continue
@@ -125,7 +121,7 @@ func (c *CalendarRequest) Generate() (string, error) {
 	srv, err := calendar.NewService(ctx, option.WithTokenSource(
 		googleOauthConfig.TokenSource(ctx, &user.Token)))
 	if err != nil {
-		return "", fmt.Errorf("calendar.NewService failed with '%s'\n", err)
+		return "", fmt.Errorf("calendar.NewService failed with '%s'", err)
 	}
 	t := time.Now().Format(time.RFC3339)
 
@@ -136,7 +132,7 @@ func (c *CalendarRequest) Generate() (string, error) {
 		OrderBy("startTime").
 		Do()
 	if err != nil {
-		return "", fmt.Errorf("Unable to retrieve next ten of the user's events: %v\n", err)
+		return "", fmt.Errorf("Unable to retrieve next ten of the user's events: %v", err)
 	}
 
 	wrapper := wordwrap.Wrapper(c.MaxWidth, false)
@@ -209,9 +205,6 @@ func (c *CalendarRequest) Generate() (string, error) {
 }
 
 func (c *CalendarRequest) Color(name, text string) string {
-	if c.NoColor {
-		return text
-	}
 	return colorMap[name](text)
 }
 
